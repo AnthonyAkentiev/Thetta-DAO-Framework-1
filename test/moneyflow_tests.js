@@ -193,6 +193,18 @@ contract('Moneyflow', (accounts) => {
 	let daoBase;
 	let moneyflowInstance;
 
+	let issueTokens;
+	let manageGroups;
+	let addNewProposal;
+	let upgradeDaoContract;
+	let addNewTask;
+	let startTask;
+	let startBounty;
+	let modifyMoneyscheme;
+	let withdrawDonations;
+	let setRootWeiReceiver;
+	let burnTokens;
+	
 	let money = web3.toWei(0.001, "ether");
 
 	const creator = accounts[0];
@@ -205,33 +217,82 @@ contract('Moneyflow', (accounts) => {
 		token = await StdDaoToken.new("StdToken","STDT",18, true, true, true, 1000000000000000000000000000);
 
 		await token.mint(creator, 1000, {gasPrice: 0});
+<<<<<<< HEAD
 		store = await DaoStorage.new([token.address],{ from: creator });
 		daoBase = await DaoBase.new(store.address,{ from: creator });
+=======
+		store = await DaoStorage.new([token.address],{gas: 10000000, from: creator});
+		daoBase = await DaoBase.new(store.address,{gas: 10000000, from: creator});
+		
+		await daoBase.ISSUE_TOKENS().then(result => {
+			issueTokens = result;
+		});
+		
+		await daoBase.MANAGE_GROUPS().then(result => {
+			manageGroups = result;
+		});
+		
+		await daoBase.ADD_NEW_PROPOSAL().then(result => {
+			addNewProposal = result;
+		});
+		
+		await daoBase.UPGRADE_DAO_CONTRACT().then(result => {
+			upgradeDaoContract = result;
+		});
+		
+		await daoBase.ADD_NEW_TASK().then(result => {
+			addNewTask = result;
+		});
+		
+		await daoBase.START_TASK().then(result => {
+			startTask = result;
+		});
+		
+		await daoBase.START_BOUNTY().then(result => {
+			startBounty = result;
+		});
+		
+		await daoBase.MODIFY_MONEY_SCHEME().then(result => {
+			modifyMoneyscheme = result;
+		});
+		
+		await daoBase.WITHDRAW_DONATIONS().then(result => {
+			withdrawDonations = result;
+		});
+		
+		await daoBase.SET_ROOT_WEI_RECEIVER().then(result => {
+			setRootWeiReceiver = result;
+		});
+		
+		await daoBase.BURN_TOKENS().then(result => {
+			burnTokens = result;
+		});
+>>>>>>> 44c5691940106a172ef136b5df75112c76a67945
 
 		// add creator as first employee
 		await store.addGroupMember(KECCAK256("Employees"), creator);
-		await store.allowActionByAddress(KECCAK256("manageGroups"),creator);
+		await store.allowActionByAddress(manageGroups,creator);
 
 		// do not forget to transfer ownership
 		await token.transferOwnership(daoBase.address);
 		await store.transferOwnership(daoBase.address);
 
 		// manually setup the Default organization 
-		await daoBase.allowActionByAnyMemberOfGroup("addNewProposal","Employees");
-		await daoBase.allowActionByAnyMemberOfGroup("modifyMoneyscheme","Employees");
-		await daoBase.allowActionByAnyMemberOfGroup("setRootWeiReceiver","Employees");
+		await daoBase.allowActionByAnyMemberOfGroup(addNewProposal,"Employees");
+		await daoBase.allowActionByAnyMemberOfGroup(modifyMoneyscheme,"Employees");
+		await daoBase.allowActionByAnyMemberOfGroup(setRootWeiReceiver,"Employees");
 
-		await daoBase.allowActionByAnyMemberOfGroup("openGate","Employees");
-		await daoBase.allowActionByAnyMemberOfGroup("closeGate","Employees");
-
+		await daoBase.allowActionByAnyMemberOfGroup(KECCAK256("openGate"),"Employees");
+		await daoBase.allowActionByAnyMemberOfGroup(KECCAK256("closeGate"),"Employees");
+	
 		// this is a list of actions that require voting
-		await daoBase.allowActionByVoting("manageGroups", token.address);
-		await daoBase.allowActionByVoting("addNewTask", token.address);
-		await daoBase.allowActionByVoting("issueTokens", token.address);
+		await daoBase.allowActionByVoting(manageGroups, token.address);
+		await daoBase.allowActionByVoting(addNewTask, token.address);
+		await daoBase.allowActionByVoting(issueTokens, token.address);
 
 		// THIS permission IS VERY DANGEROUS!!!
 		// allow creator to get donations from the Moneyflow 
-		await daoBase.allowActionByAddress("withdrawDonations", creator);
+		await daoBase.allowActionByAddress(withdrawDonations, creator);
 
 		moneyflowInstance = await MoneyFlow.new(daoBase.address);
 
@@ -444,7 +505,9 @@ contract('Moneyflow', (accounts) => {
 		let dividends = 2500;
 
 		let struct = await createStructure(creator, money, e1, e2, e3, office, internet, t1, t2, t3, b1, b2, b3, reserve, dividends);
+
 		let splitterParams = await getSplitterParams(struct, CURRENT_INPUT, money, creator);
+
 		await totalAndMinNeedsAsserts(splitterParams, CURRENT_INPUT, money, e1, e2, e3, office, internet, t1, t2, t3, b1, b2, b3, reserve, dividends);
 		await structureAsserts(splitterParams);
 
@@ -453,6 +516,7 @@ contract('Moneyflow', (accounts) => {
 		let balances = await getBalances(struct);
 		await balancesAsserts(balances, CURRENT_INPUT, money, e1, e2, e3, office, internet, t1, t2, t3, b1, b2, b3, reserve, dividends);
 		await splitterBalancesAsserts(balances, money, 0, 0, 0, 0, 0, 0, 0);
+
 	});
 
 	it('should process money with a scheme just like in the paper: 75/25 others, send EQUAL to minNeed',async() => {
@@ -473,6 +537,7 @@ contract('Moneyflow', (accounts) => {
 
 		let struct = await createStructure(creator, money, e1, e2, e3, office, internet, t1, t2, t3, b1, b2, b3, reserve, dividends);
 		let splitterParams = await getSplitterParams(struct, CURRENT_INPUT, money, creator);
+
 		await totalAndMinNeedsAsserts(splitterParams, CURRENT_INPUT, money, e1, e2, e3, office, internet, t1, t2, t3, b1, b2, b3, reserve, dividends);
 		await structureAsserts(splitterParams);
 

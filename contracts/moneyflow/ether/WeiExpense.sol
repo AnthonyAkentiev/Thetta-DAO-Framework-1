@@ -20,6 +20,9 @@ contract WeiExpense is IWeiReceiver, IDestination, Ownable {
 	uint neededWei = 0;
 	address moneySource = 0x0;
 
+	bytes32 constant public START_TASK = keccak256("startTask");
+	bytes32 constant public START_BOUNTY = keccak256("startBounty");
+
 	event WeiExpense_Flush(address _owner, uint _balance);
 	event WeiExpense_SetNeededWei(uint _neededWei);
 	event WeiExpense_SetPercents(uint _percentsMul100);
@@ -49,7 +52,7 @@ contract WeiExpense is IWeiReceiver, IDestination, Ownable {
 	function _processFunds(uint _currentFlow) internal{
 		require(_isNeedsMoney());
 
-		require(msg.value==_getTotalWeiNeeded(_currentFlow));
+		require(msg.value == _getTotalWeiNeeded(_currentFlow));
 
 		// TODO: why not working without if????
 		if(isPeriodic){ 
