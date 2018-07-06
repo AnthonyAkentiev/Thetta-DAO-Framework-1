@@ -114,7 +114,7 @@ contract('DaoBaseAuto', (accounts) => {
 		await token.transferOwnership(daoBase.address);
 		await store.transferOwnership(daoBase.address);
 	});
-
+/*
 	it('should not automatically create proposal because AAC has no rights',async() => {
 		// Set permissions:
 		
@@ -401,5 +401,54 @@ contract('DaoBaseAuto', (accounts) => {
         // check membership
         const isEmployeeAdded = await daoBase.isGroupMember("Employees", employee1);
         assert.equal(isEmployeeAdded, true, 'Employee1 should be added as the company`s employee');
+    });
+    */
+    
+    it('should be able to add group member with AAC (with voting)', async() => {
+        // check membership
+//        const isEmployeePresented = await daoBase.isGroupMember("Employees", employee1);
+//        assert.equal(isEmployeePresented, false, 'Employee1 should NOT be employee of the company');
+        
+//        await daoBase.addGroupMember("Employees", employee1);
+        
+        // set permissions
+//        await daoBase.allowActionByVoting(manageGroups, token.address);
+//        await daoBase.allowActionByVoting(addNewProposal, token.address);
+        
+        // THIS IS REQUIRED because addGroupMemberAuto() will add new proposal (voting)
+//        await daoBase.allowActionByAddress(addNewProposal, aacInstance.address);
+		// these actions required if AAC will call this actions DIRECTLY (without voting)
+//        await daoBase.allowActionByAddress(manageGroups, aacInstance.address);
+
+        // check permissions
+//        const isCanDoAction = await daoBase.isCanDoAction(employee1, manageGroups);
+//        assert.equal(isCanDoAction, false, 'Employee1 should NOT have permission to run action');
+
+        // Voting call
+        await aacInstance.addGroupMemberAuto("Employees", employee2, {from: employee1});
+/*
+        // check the voting data
+        const pa = await daoBase.getProposalAtIndex(0);
+		const proposal = await IProposal.at(pa);
+		const votingAddress = await proposal.getVoting();
+		const voting = await IVoting.at(votingAddress);
+		
+        assert.strictEqual(await voting.isFinished(), false, 'Voting is still not finished');
+		assert.strictEqual(await voting.isYes(), false, 'Voting is still not finished');
+
+		await voting.vote(true, 0);
+		
+		const r2 = await voting.getVotingStats();
+		assert.equal(r2[0].toNumber(), 2, 'yes');  // 1 already voted (who started the voting)
+		assert.equal(r2[1].toNumber(), 0, 'no');
+
+		// get voting results again
+		assert.strictEqual(await voting.isFinished(), true, 'Voting is still not finished');
+		assert.strictEqual(await voting.isYes(), true, 'Voting is still not finished');
+        
+        // check membership
+        const isEmployeeAdded = await daoBase.isGroupMember("Employees", employee2);
+        assert.equal(isEmployeeAdded, true, 'Employee2 should be added as the company`s employee');
+        */
     });
 });
