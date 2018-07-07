@@ -110,9 +110,27 @@ contract('DaoBaseAuto', (accounts) => {
 		await store.addGroupMember(KECCAK256("Employees"), creator);
 		await store.allowActionByAddress(manageGroups,creator);
 
+
 		// do not forget to transfer ownership
 		await token.transferOwnership(daoBase.address);
 		await store.transferOwnership(daoBase.address);
+		await daoBase.addGroupMember("Employees", employee1);
+		// await daoBase.addGroupMember("Employees", employee2);
+
+		// Set permissions:
+		await daoBase.allowActionByAnyMemberOfGroup(addNewProposal,"Employees");
+		await daoBase.allowActionByAnyMemberOfGroup(burnTokens, "Employees");
+
+		await daoBase.allowActionByVoting(manageGroups, token.address);
+		await daoBase.allowActionByVoting(issueTokens, token.address);
+		await daoBase.allowActionByVoting(upgradeDaoContract, token.address);	
+		await daoBase.allowActionByVoting(addNewProposal, token.address);	
+
+		await daoBase.allowActionByAddress(manageGroups, aacInstance.address);
+		await daoBase.allowActionByAddress(issueTokens, aacInstance.address);
+		await daoBase.allowActionByAddress(upgradeDaoContract, aacInstance.address);
+		await daoBase.allowActionByAddress(addNewProposal, aacInstance.address);
+					
 	});
 /*
 	it('should not automatically create proposal because AAC has no rights',async() => {
@@ -425,7 +443,7 @@ contract('DaoBaseAuto', (accounts) => {
 //        assert.equal(isCanDoAction, false, 'Employee1 should NOT have permission to run action');
 
         // Voting call
-        await aacInstance.addGroupMemberAuto("Employees", employee2, {from: employee1});
+        await aacInstance.addGroupMemberAuto("Employees", employee2, {from: creator});
 /*
         // check the voting data
         const pa = await daoBase.getProposalAtIndex(0);
