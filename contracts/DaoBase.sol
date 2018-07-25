@@ -143,13 +143,11 @@ contract DaoBase is IDaoBase, Ownable {
 		}
 
 		for(uint i=0; i<store.getAllTokenAddresses().length; ++i){
-
 			// 2 - check if shareholder can do that without voting?
 			if(store.isCanDoByShareholder(_permissionNameHash, store.getAllTokenAddresses()[i]) && 
 				(store.getAllTokenAddresses()[i].balanceOf(_a)!=0)){
 				return true;
 			}
-
 
 			// 3 - can do action only by starting new vote first?
 			bool isCan = store.isCanDoByVoting(_permissionNameHash, store.getAllTokenAddresses()[i]);
@@ -196,6 +194,7 @@ contract DaoBase is IDaoBase, Ownable {
 // Tokens:
 	function issueTokens(address _tokenAddress, address _to, uint _amount)public isCanDo(ISSUE_TOKENS) {
 		emit DaoBase_IssueTokens(_tokenAddress, _to, _amount);
+
 		for(uint i=0; i<store.getAllTokenAddresses().length; ++i){
 			if(store.getAllTokenAddresses()[i]==_tokenAddress){
 				// WARNING:
@@ -217,6 +216,35 @@ contract DaoBase is IDaoBase, Ownable {
 				// WARNING:
 				// token ownership should be transferred to the current DaoBase to do that!!!
 				store.getAllTokenAddresses()[i].burnFor(_who, _amount);
+				return;
+			}
+		}
+
+		// if not found!
+		revert();
+	}
+
+	// TODO: add isCanDo 
+	function startPreservingBalancesInToken(address _tokenAddress) public returns(uint){
+		for(uint i=0; i<store.getAllTokenAddresses().length; ++i){
+			if(store.getAllTokenAddresses()[i]==_tokenAddress){
+				// WARNING:
+				// token ownership should be transferred to the current DaoBase to do that!!!
+				return store.getAllTokenAddresses()[i].startNewVoting();
+			}
+		}
+
+		// if not found!
+		revert();
+	}
+
+	// TODO: add isCanDo 
+	function stopPreservingBalancesInToken(address _tokenAddress, uint _votingID) public {
+		for(uint i=0; i<store.getAllTokenAddresses().length; ++i){
+			if(store.getAllTokenAddresses()[i]==_tokenAddress){
+				// WARNING:
+				// token ownership should be transferred to the current DaoBase to do that!!!
+				store.getAllTokenAddresses()[i].finishVoting(_votingID);
 				return;
 			}
 		}

@@ -39,6 +39,8 @@ contract IDaoBase {
 	//function addTokenAddressToList();
 	function issueTokens(address _tokenAddress, address _to, uint amount)public;
 	function burnTokens(address _tokenAddress, address _who, uint amount)public;
+	function startPreservingBalancesInToken(address _tokenAddress) public returns(uint);
+	function stopPreservingBalancesInToken(address _tokenAddress, uint _votingID) public;
 
 // Governance/Proposals
 	function addNewProposal(IProposal _proposal) public;

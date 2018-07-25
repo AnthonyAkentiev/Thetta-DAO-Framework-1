@@ -107,7 +107,7 @@ contract GenericCaller is DaoClient, Ownable {
 	function createVoting(bytes32 _permissionIdHash, IProposal _proposal, address _origin)public returns(IVoting){
 		VotingParams memory vp = votingParams[_permissionIdHash];
 
-		IVoting V = new Voting(dao, _proposal, _origin, vp.votingType,
+		Voting v = new Voting(dao, _proposal, _origin, vp.votingType,
 			uint(vp.param1), 
 			bytes32ToString(vp.param2),
 			uint(vp.param3), 
@@ -115,7 +115,15 @@ contract GenericCaller is DaoClient, Ownable {
 			address(vp.param5)
 		);
 
-		return V;
+		if(VotingLib.VotingType.Voting1p1v!=vp.votingType){
+			uint tokenVotingID = dao.startPreservingBalancesInToken(address(vp.param5));
+			v.setTokenVotingID(tokenVotingID); 
+		}
+
+		// we should call a first vote automatically
+		v.vote(true);
+
+		return IVoting(v);
 	}
 
 	function bytes32ToString(bytes32 x)pure internal returns(string){

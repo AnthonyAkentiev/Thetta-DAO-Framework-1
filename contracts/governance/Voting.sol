@@ -41,6 +41,10 @@ contract Voting is DaoClient, IVoting, Ownable {
 		store.generalConstructor(_dao, _proposal, _origin, _votingType, _minutesToVote, _groupName, _quorumPercent, _consensusPercent, _tokenAddress);
 	}
 
+	function setTokenVotingID(uint _tokenVotingID) public onlyOwner {
+		store.setTokenVotingID(_tokenVotingID);
+	}
+
 	function quorumPercent()view returns(uint){
 		return store.quorumPercent;
 	}
@@ -81,7 +85,6 @@ contract Voting is DaoClient, IVoting, Ownable {
 		return store.getVotingStats();
 	}
 
-	// TODO: add tests
 	function cancelVoting() public onlyOwner {
 		store.canceled = true;
 
@@ -174,9 +177,7 @@ library VotingLib {
 
 		if(VotingType.Voting1p1v!=store.votingType){
 			store.tokenAddress = _tokenAddress;
-			store.votingID = StdDaoToken(_tokenAddress).startNewVoting();
 		}
-		libVote(store, _origin, true);
 	}
 
 	function getNow() public view returns(uint){
@@ -230,6 +231,10 @@ library VotingLib {
 			y = z;
 			z = (x/z+z)/2;
 		}
+	}
+
+	function setTokenVotingID(VotingStorage storage store, uint _tokenVotingID) public {
+		store.votingID = _tokenVotingID;
 	}
 
 	function libVote(VotingStorage storage store, address _voter, bool _isYes) public {

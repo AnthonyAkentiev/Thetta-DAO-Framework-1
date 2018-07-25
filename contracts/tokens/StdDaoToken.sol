@@ -65,7 +65,7 @@ contract StdDaoToken is DetailedERC20, PausableToken, CopyOnWriteToken, ITokenVo
 	}
 
 	// TODO: VULNERABILITY! no onlyOwner!
-	function finishVoting(uint _votingID) whenNotPaused public {
+	function finishVoting(uint _votingID) public whenNotPaused {
 		super.finishEvent(_votingID);
 		emit VotingFinished(msg.sender, _votingID);
 	}
