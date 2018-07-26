@@ -186,7 +186,6 @@ contract('Voting Quadratic', (accounts) => {
 		assert.strictEqual(await voting.isYes(),true,'Voting is finished');
 	});
 
-	/*
 	it('1.2. Q Scenario: 5 employees, 1/5 voted yes, params(10,100) => isYes==true',async() => {
 		await aacInstance.setVotingParams(setRootWeiReceiver, VOTING_TYPE_QUADRATIC, UintToToBytes32(0), fromUtf8("Employees"), UintToToBytes32(10), UintToToBytes32(100), addressToBytes32(token.address));
 		const wae = await WeiAbsoluteExpense.new(1000);
@@ -407,5 +406,4 @@ contract('Voting Quadratic', (accounts) => {
 		assert.strictEqual(await voting.isFinished(),false,'Voting should be finished');
 		assert.strictEqual(await voting.isYes(),false,'Voting is finished');
 	});
-	*/
 });

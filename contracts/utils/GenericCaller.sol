@@ -12,7 +12,7 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
  * @dev This is a wrapper that help us to do action that CAN require votings
  * WARNING: should be permitted to add new proposal by the current DaoBase!!!
 */
-contract GenericCaller is DaoClient, Ownable {
+contract GenericCaller is DaoClient, Ownable, IVotingCallback {
 	using VotingLib for VotingLib.VotingType;
 
 	event consoleAddr(string comment, address a);
@@ -107,7 +107,7 @@ contract GenericCaller is DaoClient, Ownable {
 	function createVoting(bytes32 _permissionIdHash, IProposal _proposal, address _origin)public returns(IVoting){
 		VotingParams memory vp = votingParams[_permissionIdHash];
 
-		Voting v = new Voting(dao, _proposal, _origin, vp.votingType,
+		Voting v = new Voting(dao, this, _proposal, _origin, vp.votingType,
 			uint(vp.param1), 
 			bytes32ToString(vp.param2),
 			uint(vp.param3), 
@@ -115,15 +115,24 @@ contract GenericCaller is DaoClient, Ownable {
 			address(vp.param5)
 		);
 
+		// in case we deal with token -> do not block token transfers 
 		if(VotingLib.VotingType.Voting1p1v!=vp.votingType){
 			uint tokenVotingID = dao.startPreservingBalancesInToken(address(vp.param5));
 			v.setTokenVotingID(tokenVotingID); 
 		}
 
 		// we should call a first vote automatically
-		v.vote(true);
+		v.startVotingAndVotePositive(_origin);
 
 		return IVoting(v);
+	}
+
+	// TODO: check who calls us!
+	function onVotingCompleted(address _votingFrom) public {
+		Voting v = Voting(_votingFrom);
+		if(v.getVotingType()!=VotingLib.VotingType.Voting1p1v){
+			dao.stopPreservingBalancesInToken(v.getTokenAddress(), v.getTokenVotingID());
+		}
 	}
 
 	function bytes32ToString(bytes32 x)pure internal returns(string){

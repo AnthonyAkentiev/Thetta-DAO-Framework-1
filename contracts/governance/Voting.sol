@@ -6,6 +6,10 @@ import './IProposal.sol';
 import '../tokens/StdDaoToken.sol';
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
+contract IVotingCallback {
+	function onVotingCompleted(address _votingFrom)public;
+}
+
 // TODO Stacked voting:
 // 1 - client transfers N tokens for D days
 // 2 - client calls vote(_yes, _tokenAmount) 
@@ -30,19 +34,33 @@ contract Voting is DaoClient, IVoting, Ownable {
 	 * @param _groupName – for votings that for dao group members only
 	 * @param _tokenAddress – for votings that uses token amount of voter
 	*/
-	constructor(IDaoBase _dao, IProposal _proposal, 
-		address _origin, VotingLib.VotingType _votingType, 
-		uint _minutesToVote, string _groupName, 
-		uint _quorumPercent, uint _consensusPercent, 
+	constructor(
+		IDaoBase _dao, 
+		IVotingCallback _callback,
+		IProposal _proposal, 
+		address _origin, 
+		VotingLib.VotingType _votingType, 
+		uint _minutesToVote, 
+		string _groupName, 
+		uint _quorumPercent, 
+		uint _consensusPercent, 
 		address _tokenAddress) public 
 		DaoClient(_dao)
 	{
 		// TODO: remove _dao from storage!!!
-		store.generalConstructor(_dao, _proposal, _origin, _votingType, _minutesToVote, _groupName, _quorumPercent, _consensusPercent, _tokenAddress);
+		store.generalConstructor(_dao, _callback, _proposal, _origin, _votingType, _minutesToVote, _groupName, _quorumPercent, _consensusPercent, _tokenAddress);
 	}
 
 	function setTokenVotingID(uint _tokenVotingID) public onlyOwner {
 		store.setTokenVotingID(_tokenVotingID);
+	}
+
+	function getTokenVotingID() public view returns(uint){
+		return store.getTokenVotingID();
+	}
+
+	function getTokenAddress() public view returns(address){
+		return store.getTokenAddress();
 	}
 
 	function quorumPercent()view returns(uint){
@@ -83,6 +101,15 @@ contract Voting is DaoClient, IVoting, Ownable {
 
 	function getVotingStats() public constant returns(uint yesResults, uint noResults, uint votersTotal){
 		return store.getVotingStats();
+	}
+
+	function getVotingType() public constant returns(VotingLib.VotingType){
+		return store.getVotingType();
+	}
+
+	// call this when you are ready to start!
+	function startVotingAndVotePositive(address _origin) public onlyOwner {
+		store.startVotingAndVotePositive(_origin);
 	}
 
 	function cancelVoting() public onlyOwner {
@@ -138,6 +165,7 @@ library VotingLib {
 
 	struct VotingStorage{
 		IDaoBase dao;
+		IVotingCallback callback;
 		IProposal proposal; 
 		uint minutesToVote;
 		bool finishedWithYes;
@@ -157,7 +185,9 @@ library VotingLib {
 		VotingType votingType;	
 	}
 
-	function generalConstructor(VotingStorage storage store, IDaoBase _dao, IProposal _proposal, 
+	function generalConstructor(VotingStorage storage store, IDaoBase _dao, 
+		IVotingCallback _callback,									 
+		IProposal _proposal, 
 		address _origin, VotingType _votingType, 
 		uint _minutesToVote, string _groupName, 
 		uint _quorumPercent, uint _consensusPercent, 
@@ -167,6 +197,7 @@ library VotingLib {
 		require((_consensusPercent<=100)&&(_consensusPercent>0));
 
 		store.dao = _dao;
+		store.callback = _callback;
 		store.proposal = _proposal;
 		store.minutesToVote = _minutesToVote;
 		store.quorumPercent = _quorumPercent;
@@ -178,6 +209,10 @@ library VotingLib {
 		if(VotingType.Voting1p1v!=store.votingType){
 			store.tokenAddress = _tokenAddress;
 		}
+	}
+
+	function startVotingAndVotePositive(VotingStorage storage store, address _origin){
+		libVote(store, _origin, true);
 	}
 
 	function getNow() public view returns(uint){
@@ -235,6 +270,14 @@ library VotingLib {
 
 	function setTokenVotingID(VotingStorage storage store, uint _tokenVotingID) public {
 		store.votingID = _tokenVotingID;
+	}
+
+	function getTokenVotingID(VotingStorage storage store) public view returns(uint){
+		return store.votingID;
+	}
+
+	function getTokenAddress(VotingStorage storage store) public view returns(address){
+		return store.tokenAddress;
 	}
 
 	function libVote(VotingStorage storage store, address _voter, bool _isYes) public {
@@ -299,6 +342,10 @@ library VotingLib {
 		return;
 	}
 
+	function getVotingType(VotingStorage storage store) public constant returns(VotingLib.VotingType){
+		return store.votingType;
+	}
+
 	function getDelegatedPowerOf(VotingStorage storage store, address _of) public view returns(uint res) {
 		for(uint i = 0; i < store.delegations[_of].length; i++){
 			if(!store.delegations[_of][i].isDelegator){
@@ -358,7 +405,12 @@ library VotingLib {
 			// should not be callable again!!!
 			store.finishedWithYes = true;
 			emit CallAction();
-			store.proposal.action(); // can throw!
+
+			// signal the end of the voting
+			store.callback.onVotingCompleted(this); 
+
+			// do the action!
+			store.proposal.action();				// can throw!
 		}
 	}			
 }

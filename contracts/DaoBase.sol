@@ -238,7 +238,6 @@ contract DaoBase is IDaoBase, Ownable {
 		revert();
 	}
 
-	// TODO: add isCanDo 
 	function stopPreservingBalancesInToken(address _tokenAddress, uint _votingID) public {
 		for(uint i=0; i<store.getAllTokenAddresses().length; ++i){
 			if(store.getAllTokenAddresses()[i]==_tokenAddress){

@@ -86,7 +86,6 @@ contract CopyOnWriteToken is MintableToken, BurnableToken {
 	function finishEvent(uint _eventID) public {
 		require(events[_eventID].isEventInProgress);
 		events[_eventID].isEventInProgress = false;
-
 		emit EventFinished(msg.sender, _eventID);
 	}
 	
